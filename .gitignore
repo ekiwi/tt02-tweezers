@@ -2,3 +2,6 @@
 .idea
 .vscode
 *.vcd
+# scala
+.bsp/
+target/
