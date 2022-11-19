@@ -2,33 +2,16 @@
 
 import chisel3._
 import chisel3.stage.ChiselStage
-import chisel.lib.uart._
 
-
-case class TweezersConfig(frequency: Int, baud: Int)
-
+// template I/O and class for user module
 class TweezersIO extends Bundle {
-    val rx = Input(Bool())
-    val tx = Output(Bool())
+    val inputs = Input(Vec(6, Bool()))
+    val outputs = Output(Vec(8, Bool()))
 }
 
-class Tweezers(conf: TweezersConfig) extends Module {
+abstract class TweezersDesign extends Module {
     val io = IO(new TweezersIO)
-
-    // instantiate standard sender and receiver
-    val rx = Module(new Rx(conf.frequency, conf.baud))
-    val tx = Module(new Tx(conf.frequency, conf.baud))
-
-    // increment any received character and send it out
-    rx.io.channel <> tx.io.channel
-    tx.io.channel.bits := rx.io.channel.bits + 1.U
-
-
-    // connect UART RX and TX pins to the outside world
-    io.tx := tx.io.txd
-    rx.io.rxd := io.rx
 }
-
 
 // TinyTapeout Wrapper
 class TinyTapeoutIO extends Bundle {
@@ -38,30 +21,29 @@ class TinyTapeoutIO extends Bundle {
 
 /** top module with TinyTapeout compatible I/O names.
  * @note: this needs to be a raw module since the clock pin is not named "clock" */
-class TweezersTop(conf: TweezersConfig) extends RawModule {
+class TweezersTop(createDesign: () => TweezersDesign) extends RawModule {
     val io = IO(new TinyTapeoutIO)
     // clock and reset mapping mapping
     val clock = io.in(0)
     val reset = io.in(1)
     val tweezers = withClockAndReset(clock.asClock, reset) {
-        Module(new Tweezers(conf))
+        Module(createDesign())
     }
-    tweezers.io.rx := io.in(2)
-    val out = Wire(Vec(8, Bool()))
-    out := DontCare
-    out(0) := tweezers.io.tx
-    io.out := out.asUInt
+    tweezers.io.inputs.zip(io.in.asBools.drop(2)).foreach{ case (a,b) => a := b }
+    io.out := tweezers.io.outputs.asUInt
 }
 
 object TweezersGenerator {
     private val DefaultArgs = Array("--target-dir", "src")
+    private val DefaultFrequency = 1000
+    private val Designs = Map(
+        "uart" -> (() => new UartDesign(frequency = DefaultFrequency, baud = 300)),
+        "async-fifo-lib" -> (() => new ChiselLibAsyncFifo),
+    )
     def main(args: Array[String]): Unit = {
         // DefaultArgs are useful when launching from IntelliJ
         val aa = if(args.length > 0) args else DefaultArgs
-        val conf = TweezersConfig(
-            frequency = 3000,
-            baud = 300,
-        )
-        (new ChiselStage).emitSystemVerilog(new TweezersTop(conf), aa)
+        val design = Designs("async-fifo-lib")
+        (new ChiselStage).emitSystemVerilog(new TweezersTop(design), aa)
     }
 }
