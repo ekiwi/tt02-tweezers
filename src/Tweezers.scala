@@ -26,7 +26,7 @@ class TweezersTop(createDesign: () => TweezersDesign) extends RawModule {
     // clock and reset mapping mapping
     val clock = io.in(0)
     val reset = io.in(1)
-    val tweezers = withClockAndReset(clock.asClock, reset) {
+    val tweezers = withClockAndReset(clock.asClock, reset.asAsyncReset) {
         Module(createDesign())
     }
     tweezers.io.inputs.zip(io.in.asBools.drop(2)).foreach{ case (a,b) => a := b }
@@ -39,11 +39,12 @@ object TweezersGenerator {
     private val Designs = Map(
         "uart" -> (() => new UartDesign(frequency = DefaultFrequency, baud = 300)),
         "async-fifo-lib" -> (() => new ChiselLibAsyncFifo),
+        "async-fifo-amaranth" -> (() => new AmaranthAsyncFifo),
     )
     def main(args: Array[String]): Unit = {
         // DefaultArgs are useful when launching from IntelliJ
         val aa = if(args.length > 0) args else DefaultArgs
-        val design = Designs("async-fifo-lib")
+        val design = Designs("async-fifo-amaranth")
         (new ChiselStage).emitSystemVerilog(new TweezersTop(design), aa)
     }
 }
