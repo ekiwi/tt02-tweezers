@@ -38,8 +38,8 @@ object TweezersGenerator {
     private val DefaultFrequency = 1000
     private val Designs = Map(
         "uart" -> (() => new UartDesign(frequency = DefaultFrequency, baud = 300)),
-        "async-fifo-lib" -> (() => new ChiselLibAsyncFifo),
-        "async-fifo-amaranth" -> (() => new AmaranthAsyncFifo),
+        "async-fifo-lib" -> (() => new ChiselLibAsyncFifo(depth = 8, width = 2)),
+        "async-fifo-amaranth" -> (() => new AmaranthAsyncFifo(depth = 8, width = 3)),
     )
     def main(args: Array[String]): Unit = {
         // DefaultArgs are useful when launching from IntelliJ

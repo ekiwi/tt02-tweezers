@@ -1,10 +1,8 @@
 import chisel3._
 import chisel3.util._
 
-class ChiselLibAsyncFifo extends TweezersDesign with RequireAsyncReset {
-  val Width = 2
-
-  val fifo = Module(new DCAsyncFifo(UInt(Width.W), 4))
+class ChiselLibAsyncFifo(depth: Int = 3, width: Int = 2) extends TweezersDesign with RequireAsyncReset {
+  val fifo = Module(new DCAsyncFifo(UInt(width.W), depth))
 
   // connect inputs
   fifo.io.enqClock := clock
@@ -13,7 +11,7 @@ class ChiselLibAsyncFifo extends TweezersDesign with RequireAsyncReset {
   fifo.io.deqReset := io.inputs(1).asAsyncReset
   fifo.io.enq.valid := io.inputs(2)
   fifo.io.deq.ready := io.inputs(3)
-  require(Width + 4 <= io.inputs.length, f"Only ${io.inputs.length} input bits are available")
+  require(width + 4 <= io.inputs.length, f"Only ${io.inputs.length} input bits are available")
   fifo.io.enq.bits := Cat(io.inputs.drop(4).take(Width))
 
   // connect outputs
