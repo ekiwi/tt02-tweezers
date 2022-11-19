@@ -12,7 +12,7 @@ class ChiselLibAsyncFifo(depth: Int = 3, width: Int = 2) extends TweezersDesign 
   fifo.io.enq.valid := io.inputs(2)
   fifo.io.deq.ready := io.inputs(3)
   require(width + 4 <= io.inputs.length, f"Only ${io.inputs.length} input bits are available")
-  fifo.io.enq.bits := Cat(io.inputs.drop(4).take(Width))
+  fifo.io.enq.bits := Cat(io.inputs.drop(4).take(width))
 
   // connect outputs
   io.outputs := DontCare
