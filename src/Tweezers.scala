@@ -40,11 +40,12 @@ object TweezersGenerator {
         "uart" -> (() => new UartDesign(frequency = DefaultFrequency, baud = 300)),
         "async-fifo-lib" -> (() => new ChiselLibAsyncFifo(depth = 8, width = 2)),
         "async-fifo-amaranth" -> (() => new AmaranthAsyncFifo(depth = 8, width = 3)),
+        "async-fifo-dual" -> (() => new DualFifoDesign(depth = 8, width = 2)),
     )
     def main(args: Array[String]): Unit = {
         // DefaultArgs are useful when launching from IntelliJ
         val aa = if(args.length > 0) args else DefaultArgs
-        val design = Designs("async-fifo-amaranth")
+        val design = Designs("async-fifo-dual")
         (new ChiselStage).emitSystemVerilog(new TweezersTop(design), aa)
     }
 }
